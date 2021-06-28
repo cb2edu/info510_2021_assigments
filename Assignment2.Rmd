@@ -1,0 +1,28 @@
+---
+title: "Assignment 2"
+output: html_notebook
+---
+
+```{r}
+data("iris")
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("dplyr")
+library(dplyr)
+install.packages("tidyverse")
+library(tidyverse)
+
+
+a_iris2 <- aggregate(iris[, 1:4], list(iris$Species), mean)
+a_iris2 <- gather(a_iris2, name, values, -Group.1)
+a_iris3 <- aggregate(iris[, 1:4], list(iris$Species), sd)
+a_iris3 <- gather(a_iris3, SD, values, -Group.1)
+
+names(a_iris2)[names(a_iris2) == "values"] <- "Mean"
+names(a_iris2)[names(a_iris2) == "Group.1"] <- "Species"
+
+a_iris2$sd <- a_iris3$values
+
+Iris_mean_SD <- ggplot(a_iris2, aes(x = Species, y = Mean, fill=name)) + geom_bar(position = position_dodge(),stat="identity") + geom_errorbar(aes(ymin=Mean-sd, ymax=Mean+sd), width=.2,position=position_dodge(.9))
+Iris_mean_SD
+```
