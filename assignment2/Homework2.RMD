@@ -1,0 +1,75 @@
+---
+title: "Homework2"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+data("iris")
+# View(iris)
+# install.packages("reshape2")
+library(reshape2)
+library(dplyr)
+iris
+```
+
+
+```{r}
+iris_stats<-iris %>% group_by(Species) %>% summarise(across(.cols = everything(),list(mean = mean, sd = sd)))
+# View(iris_stats)
+#get long data
+long_iris_stats<-reshape2::melt(iris_stats)
+long_iris_stats
+```
+
+
+```{r}
+#dplyr renamed my variables. I subset these data, rename everyone, and join them.
+#subset
+variable<- long_iris_stats$variable
+long_iris_means<- long_iris_stats[grep(pattern = "._mean",x = variable),]
+long_iris_sd<- long_iris_stats[grep(pattern = "._sd",x = variable),]
+long_iris_stats
+long_iris_means
+#renaming
+long_iris_sd
+long_iris_means<-long_iris_means %>% mutate(variable=recode(variable, 
+                         "Sepal.Length_mean"="Sepal.Length",
+                         "Sepal.Width_mean"="Sepal.Width",
+                         "Petal.Length_mean"="Petal.Length",
+                         "Petal.Width_mean"="Petal.Width"))
+long_iris_sd<-long_iris_sd %>% mutate(variable=recode(variable, 
+                         "Sepal.Length_sd"="Sepal.Length",
+                         "Sepal.Width_sd"="Sepal.Width",
+                         "Petal.Length_sd"="Petal.Length",
+                         "Petal.Width_sd"="Petal.Width"))
+```
+
+
+```{r}
+#join
+long_iris_join<-full_join(x = long_iris_means, y = long_iris_sd,by = c("Species","variable"))
+colnames(long_iris_join)[3]= "mean"
+colnames(long_iris_join)[4]= "sd"
+long_iris_join
+```
+
+
+```{r}
+#generate plot
+ggplot(long_iris_join, aes(x=variable,y=mean, fill=Species)) +
+  geom_bar(stat="identity", 
+           position="dodge", 
+           width = 0.9) +
+  geom_errorbar(aes(ymin=mean-sd, 
+                    ymax=mean+sd, 
+                    width=0.4), 
+                position=position_dodge(0.9))
+
+#Fin
+```
+
