@@ -1,0 +1,26 @@
+---
+title: "Homework1"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#return the numeric portions of a dataframe
+data("iris")
+library("dplyr")
+iris
+
+dplyr::select_if(iris,is.numeric)
+
+#or
+Filter(f = is.numeric,iris)
+
+#or if you just want columns..
+iris[unlist(lapply(iris,is.numeric)),]
+
+#Fin
+```
+
