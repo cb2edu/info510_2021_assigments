@@ -1,0 +1,31 @@
+---
+title: "HW2"
+author: "AJ"
+date: "7/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#*Code to display average values of the 4 variables segregated by species in the iris dataset* 
+
+```{r}
+collapsed_iris=gather(iris, key = "key",  value="val", -Species)
+split_iris=split(collapsed_iris, collapsed_iris$Species)
+
+Iris_error_values=lapply(split_iris, function(x){iris_mean <- aggregate(iris[,1:4], by=list(Species=iris$Species), FUN=mean)  
+
+iris_sd <- aggregate(iris[,1:4], by=list(Species=iris$Species), FUN=sd)  
+
+return(c(mean,sd))
+
+
+})
+
+
+ggplot(collapsed_iris, aes(x=Species, y=val, fill=key))+ geom_bar(position = "dodge", stat = "identity") 
+
+```
