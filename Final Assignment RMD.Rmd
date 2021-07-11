@@ -1,0 +1,130 @@
+---
+title: "Assignment"
+author: "Akash"
+date: "11/07/2021"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Load pnas_expression data 
+
+### Load pnas_expression data with rownames as gene name (ensembl_ID)
+
+```{r}
+pnasData <- read.table("pnas_expression.txt", header = T, row.names=1, stringsAsFactors=FALSE)
+dim(pnasData)
+head(pnasData)
+```
+### Remove the column 8 and keep the rows whose sum of all column not equals zero
+
+```{r}
+pnasData <- pnasData[rowSums(pnasData[,-8])>0,-8]
+dim(pnasData)
+head(pnasData)
+
+```
+# 2. Perform Upper quantile normalization
+```{r}
+pnas_uq  <- apply(pnasData, 2, function(x){quantile(pnasData[pnasData>0], 0.75)})
+pnas_uq_normalized <- t(t(pnasData) / pnas_uq)
+dim(pnas_uq_normalized)
+head(pnas_uq_normalized)
+
+```
+# 3. Perform Deseq normalization
+### 
+
+```{r}
+suppressPackageStartupMessages(library(DESeq2))
+coldata <- data.frame(condition=c(rep("C",4), rep("T",3)))
+dim(coldata)
+head(coldata)
+row.names(coldata) <- colnames(pnasData)
+head(coldata)
+
+```
+### Create dataset in DSeq2
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = pnasData, colData = coldata, design = ~ condition)
+dds <- estimateSizeFactors(dds)
+sizeFactors(dds)
+
+```
+### Get the normalized dataset
+
+```{r}
+pnas_deseq_normalized <- counts(dds, normalized=T)
+```
+
+# 4. Box Plot
+### This is a helper function that takes data frame as input parameter and draw Box Plot using ggplot2
+```{r}
+
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(dplyr))
+
+
+plot_ggboxPlot  <-  function(data, title, yName, ymax){
+  p <- ggplot(data, aes(x = key, y = value)) + 
+    geom_boxplot(fill = "#4271AE", colour = "#1F3552", alpha = 0.6, outlier.shape=NA)  +
+    labs(x="")  +
+    scale_y_continuous(name=yName, limits=c(0, ymax)) +
+    ggtitle(title) +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  p
+}
+
+```
+### Do the Log transformation before plotting the Box plot
+
+### Log2 transformation of raw data 
+```{r }
+log_pnasData <- log2(pnasData +1)
+```
+
+### convert Upper quantile normalized data (matrix) to data Frame and then do Log transformation
+```{r }
+pnas_uq_normalized_data  <- as.data.frame(apply(pnas_uq_normalized, 2, unlist))
+log_pnas_uq_normalized_data <- log2(pnas_uq_normalized_data +1)
+```
+
+#### convert DeSeq normalized data (matrix) to data Frame and then do Log transformation
+```{r }
+pnas_deseq_normalized_data  <- as.data.frame(apply(pnas_deseq_normalized, 2, unlist))
+log_pnas_deseq_normalized_data <- log2(pnas_deseq_normalized_data +1)
+
+```
+
+### Create ggplot objects 
+
+```{r }
+
+p_raw <- plot_ggboxPlot(gather(log_pnasData), "Before normalization", "Log2(Read counts)", 15)
+p_uq <- plot_ggboxPlot(gather(log_pnas_uq_normalized_data), "After upper quartile normalization","Log2(Read counts)", 4)
+p_deseq <- plot_ggboxPlot(gather(log_pnas_deseq_normalized_data), "After DESEQ normalization", "Log2(Read counts)", 15)
+
+```
+
+
+### Draw the ggplot objects in grid using cowplot
+```{r }
+suppressPackageStartupMessages(library(cowplot))
+plot_grid(p_raw, p_uq,p_raw, p_deseq, ncol = 2, nrow = 2)
+```
+
+
+
+
+
+
+
+
