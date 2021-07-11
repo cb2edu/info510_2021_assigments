@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+head(counts)
+```
+
+```{r}
+head(normalized_c)
+```
+
+```{r}
+head(deseq_counts)
+```
+
+
+```{r}
+library(tidyr)
+library(ggplot2)
+
+g1<- ggplot(gather(counts), aes(x=key, y=value)) + 
+    stat_boxplot(geom ='errorbar')+
+    geom_boxplot()+
+    coord_cartesian(ylim = c(0, 225)) +
+    ggtitle("Before UQN") +
+    xlab("Sample") + ylab("Reads per gene") +
+    theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = .5))
+# g1
+g2<- ggplot(gather(counts), aes(x=key, y=value)) + 
+    stat_boxplot(geom ='errorbar')+
+    geom_boxplot()+
+    coord_cartesian(ylim = c(0, 225)) +
+    ggtitle("Before DEseq Normalization") +
+      xlab("Sample") + ylab("Reads per gene")+
+    theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = .5))
+# g2
+g3 <-ggplot(gather(normalized_c), aes(x=key, y=value)) + 
+    stat_boxplot(geom ='errorbar')+
+    geom_boxplot()+
+    coord_cartesian(ylim = c(0, 2600))+
+    ggtitle("After UQN") +
+      xlab("Sample") + ylab("Reads per gene")+
+    theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = .5))
+# g3
+g4 <-ggplot(gather(as.data.frame(denorm_counts)), aes(x=key, y=value)) +stat_boxplot(geom ='errorbar')+
+    geom_boxplot()+
+    coord_cartesian(ylim = c(0, 115)) +
+    ggtitle("After DEseq Normalization") +
+      xlab("Sample") + ylab("Reads per gene")+
+    theme(plot.title = element_text(color="black", size=14, face="bold.italic", hjust = .5))
+# g4
+```
+
+```{r}
+# install.packages("ggpubr")
+library(ggpubr)
+figure <- ggarrange(g1, g2, g3, g4,
+                    ncol = 2, nrow = 2)
+figure
+```
+
